@@ -5,6 +5,7 @@ import "fmt"
 import "github.com/pugmajere/pantilthat"
 import "github.com/stianeikeland/go-rpio"
 import "log"
+import "math/rand"
 import "net/http"
 import "strings"
 import "sync"
@@ -42,19 +43,47 @@ func simplePattern(hat *pantilthat.PanTiltHat) {
 	}
 }
 
-func linePattern(hat *pantilthat.PanTiltHat) {
-	var i int16
+func randBool() bool {
+	return rand.Float32() < 0.5
+}
 
-	hat.Pan(-30)
-	for i = 20; i < 90; i++ {
+func adjustAroundCenter(center, max, min int16) int16 {
+	var adjust, result int16
+
+	if center == max {
+		adjust = -2
+	} else if center == min {
+		adjust = 2
+	} else {
+		if randBool() {
+			adjust = -2
+		} else {
+			adjust = 2
+		}
+	}
+
+	result = center + adjust
+	return result
+}
+
+func linePattern(hat *pantilthat.PanTiltHat) {
+	var pan, i int16
+
+	pan = -30
+	hat.Pan(pan)
+	for i = 45; i < 90; i++ {
 		hat.Tilt(i)
-		time.Sleep(time.Second / 20)
+		pan = adjustAroundCenter(pan, -40, -20)
+		hat.Pan(pan)
+		time.Sleep(time.Second / 15)
 		log.Printf("tilt = %d\n", i)
 	}
 
-	for i = 0; i < 70; i++ {
+	for i = 0; i < 45; i++ {
 		hat.Tilt(90 - i)
-		time.Sleep(time.Second / 20)
+		pan = adjustAroundCenter(pan, -40, -20)
+		hat.Pan(pan)
+		time.Sleep(time.Second / 15)
 		log.Printf("tilt = %d\n", i)
 	}
 }
@@ -72,6 +101,19 @@ func triggerLaser(w http.ResponseWriter, r *http.Request) {
 
 	if strings.Join(r.Form["laser"], "") != "" {
 		fmt.Fprintf(w, "Laser Active!")
+		go func() {
+			hatLock.Lock()
+			defer hatLock.Unlock()
+			laserPin.High()
+			defer laserPin.Low()
+
+			now := time.Now()
+			for time.Since(now) < *durationFlag {
+				time.Sleep(time.Second)
+			}
+			log.Println("timeout")
+		}()
+
 	} else {
 		fmt.Fprintf(w, "Oh Laser. (set laser=1 for laser.")
 	}
@@ -104,6 +146,9 @@ func main() {
 	durationFlag = flag.Duration("duration", 20*(1000*1000*1000), "Duration that the laser should move.")
 
 	flag.Parse()
+
+	rand.Seed(time.Now().UnixNano())
+	fmt.Println(randBool())
 
 	err := rpio.Open()
 	if err != nil {
