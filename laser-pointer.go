@@ -5,6 +5,7 @@ import "fmt"
 import "github.com/pugmajere/pantilthat"
 import "github.com/stianeikeland/go-rpio"
 import "log"
+import "math"
 import "math/rand"
 import "net/http"
 import "strings"
@@ -13,12 +14,32 @@ import "time"
 
 const (
 	gpio_laser1 = 18
+	m           = -0.41
+	b           = 62.67
+
+	minA   = 26
+	maxA   = 81
+	minX   = 1.5
+	maxX   = 20.0
+	deltaX = 0.05
+
+	startPan = -30
+	minPan   = -20
+	maxPan   = -40
 )
 
 var hat *pantilthat.PanTiltHat
 var hatLock sync.Mutex
 var durationFlag *time.Duration
 var laserPin rpio.Pin
+
+func Deg(r float64) float64 {
+	return r / (math.Pi / 180)
+}
+
+func convertRealDegreesIntoTilt(theta float64) float64 {
+	return m*theta + b
+}
 
 func simplePattern(hat *pantilthat.PanTiltHat) {
 
@@ -69,11 +90,11 @@ func adjustAroundCenter(center, max, min int16) int16 {
 func linePattern(hat *pantilthat.PanTiltHat) {
 	var pan, i int16
 
-	pan = -30
+	pan = startPan
 	hat.Pan(pan)
 	for i = 45; i < 90; i++ {
 		hat.Tilt(i)
-		pan = adjustAroundCenter(pan, -40, -20)
+		pan = adjustAroundCenter(pan, minPan, maxPan)
 		hat.Pan(pan)
 		time.Sleep(time.Second / 15)
 		log.Printf("tilt = %d\n", i)
@@ -81,10 +102,36 @@ func linePattern(hat *pantilthat.PanTiltHat) {
 
 	for i = 0; i < 45; i++ {
 		hat.Tilt(90 - i)
-		pan = adjustAroundCenter(pan, -40, -20)
+		pan = adjustAroundCenter(pan, minPan, maxPan)
 		hat.Pan(pan)
 		time.Sleep(time.Second / 15)
 		log.Printf("tilt = %d\n", i)
+	}
+}
+
+func adjustTargetToX(x float64, pan *int16) {
+	theta := Deg(math.Atan(x / 3))
+	thetaPrime := convertRealDegreesIntoTilt(theta)
+	hat.Tilt(int16(thetaPrime))
+	*pan = adjustAroundCenter(*pan, minPan, maxPan)
+	hat.Pan(*pan)
+	time.Sleep(time.Second / 15)
+	log.Printf("tilt = %f, real = %f, x = %f\n", thetaPrime, theta, x)
+
+}
+
+func smoothLinePattern(hat *pantilthat.PanTiltHat) {
+	var pan int16
+	var x float64
+	pan = startPan
+	hat.Pan(pan)
+
+	for x = minX; x < maxX; x += deltaX {
+		adjustTargetToX(x, &pan)
+	}
+
+	for x = maxX; x > minX; x -= deltaX {
+		adjustTargetToX(x, &pan)
 	}
 }
 
@@ -133,7 +180,7 @@ func triggerCats(w http.ResponseWriter, r *http.Request) {
 			now := time.Now()
 			for time.Since(now) < *durationFlag {
 				//simplePattern(hat)
-				linePattern(hat)
+				smoothLinePattern(hat)
 			}
 			log.Println("timeout")
 		}()
