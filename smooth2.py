@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
-import math
 import RPi.GPIO as GPIO
-import time
+import code
+import datetime
+import math
 import pantilthat
+import readline
+import rlcompleter
+import time
+
 
 GPIO_LASER = 18
 
@@ -36,9 +41,11 @@ def shutdownLaser():
     GPIO.output(GPIO_LASER, 0)
     GPIO.cleanup()
 
+def shootLaser():
+    GPIO.output(GPIO_LASER, 1)
 
 def shootCircle():
-    GPIO.output(GPIO_LASER, 1)
+    shootLaser()
 
     while True:
         for i in xrange(90):
@@ -64,7 +71,10 @@ if __name__ == '__main__':
     initLaser()
 
     try:
-        shootCircle()
+        injected = locals().copy()
+        readline.set_completer(rlcompleter.Completer(injected).complete)
+        readline.parse_and_bind('tab: complete')
+        code.InteractiveConsole(injected).interact('Laser console')
  
     finally:
         shutdownLaser()
