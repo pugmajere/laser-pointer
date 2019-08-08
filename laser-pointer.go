@@ -4,6 +4,7 @@ import "flag"
 import "fmt"
 import "github.com/pugmajere/pantilthat"
 import "github.com/stianeikeland/go-rpio"
+import "html/template"
 import "log"
 import "math"
 import "math/rand"
@@ -30,8 +31,21 @@ const (
 
 var hat *pantilthat.PanTiltHat
 var hatLock sync.Mutex
+var activeLock sync.Mutex
+var active bool
 var durationFlag *time.Duration
 var laserPin rpio.Pin
+var tmpl *template.Template
+
+type PageData struct {
+	LaserStatus string
+}
+
+func SetActive(value bool) {
+	activeLock.Lock()
+	defer activeLock.Unlock()
+	active = value
+}
 
 func Deg(r float64) float64 {
 	return r / (math.Pi / 180)
@@ -169,24 +183,36 @@ func triggerLaser(w http.ResponseWriter, r *http.Request) {
 func triggerCats(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	if strings.Join(r.Form["cats"], "") == "1" {
-		go func() {
-			hatLock.Lock()
-			defer hatLock.Unlock()
-			laserPin.High()
-			defer laserPin.Low()
-			defer hat.ServoEnable(1, false)
-			defer hat.ServoEnable(2, false)
+		if !active {
+			SetActive(true)
+			go func() {
+				hatLock.Lock()
+				defer hatLock.Unlock()
+				laserPin.High()
+				defer laserPin.Low()
+				defer hat.ServoEnable(1, false)
+				defer hat.ServoEnable(2, false)
+				defer SetActive(false)
 
-			now := time.Now()
-			for time.Since(now) < *durationFlag {
-				//simplePattern(hat)
-				smoothLinePattern(hat)
-			}
-			log.Println("timeout")
-		}()
-	} else {
-		fmt.Fprintf(w, "To entertain cats, retry with cats=1")
+				now := time.Now()
+				for time.Since(now) < *durationFlag {
+					//simplePattern(hat)
+					smoothLinePattern(hat)
+				}
+				log.Println("timeout")
+			}()
+		}
 	}
+	activeLock.Lock()
+	defer activeLock.Unlock()
+	data := PageData{}
+	if active {
+		data.LaserStatus = "Active"
+	} else {
+		data.LaserStatus = "Sleeping"
+	}
+	tmpl.Execute(w, data)
+
 }
 
 func main() {
@@ -210,6 +236,10 @@ func main() {
 	defer pin.Low()
 	laserPin = pin
 
+	active = false
+
+	tmpl = template.Must(template.ParseFiles("tmpl/page.html"))
+
 	hat, err = pantilthat.MakePanTiltHat(&pantilthat.PanTiltHatParams{})
 	if err != nil {
 		log.Printf("error init: %s\n", err)
@@ -219,6 +249,7 @@ func main() {
 
 	http.HandleFunc("/laser", triggerLaser)
 	http.HandleFunc("/cats", triggerCats)
+	http.HandleFunc("/", triggerCats)
 
 	fmt.Println("Start serving.")
 	err = http.ListenAndServeTLS(":8443", "cert.pem", "key.pem", nil) // set listen port
