@@ -217,6 +217,7 @@ func triggerCats(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	durationFlag = flag.Duration("duration", 20*(1000*1000*1000), "Duration that the laser should move.")
+	sslFlag := flag.Bool("use_ssl", false, "Enable SSL")
 
 	flag.Parse()
 
@@ -252,7 +253,11 @@ func main() {
 	http.HandleFunc("/", triggerCats)
 
 	fmt.Println("Start serving.")
-	err = http.ListenAndServeTLS(":8443", "cert.pem", "key.pem", nil) // set listen port
+	if *sslFlag {
+		err = http.ListenAndServeTLS(":8443", "cert.pem", "key.pem", nil) // set listen port
+	} else {
+		err = http.ListenAndServe(":8000", nil) // set listen port
+	}
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
