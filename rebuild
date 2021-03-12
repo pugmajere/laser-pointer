@@ -1,0 +1,21 @@
+#!/bin/bash
+
+
+age() { echo -n $(( $(date +%s) - $(date -r "$1" +%s) )); }
+
+cd ~/go/src/github.com/pugmajere/laser-pointer/
+GOPATH=~/go ; export GOPATH
+
+
+fileage=$(age cert.pem)
+if [[ $fileage -gt $((86400 * 30)) ]]; then
+    ./generate_cert --host laserpointer.internal.h4x0r5.com
+else
+    echo "No need to regenerate cert."
+fi
+
+
+gofmt laser-pointer.go && \
+    go build && \
+    go install && \
+    ~/go/bin/laser-pointer --duration "5m" --use_ssl
