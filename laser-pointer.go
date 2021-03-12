@@ -257,7 +257,8 @@ func main() {
 
 	// Schedule a periodic automatic run, so the cats have fun every day:
 	ctx := context.Context(context.Background())
-	crontime := time.Hour*8 + time.Minute*40
+	// Run at 11pm PST (10pm PDT)
+	crontime := time.Hour * 7
 	go Schedule(ctx, time.Hour*24, crontime, func(_ time.Time) { runCatLaser() })
 	defer ctx.Done()
 
