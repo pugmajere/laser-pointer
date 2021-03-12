@@ -1,5 +1,6 @@
 package main
 
+import "context"
 import "flag"
 import "fmt"
 import "github.com/pugmajere/pantilthat"
@@ -180,27 +181,30 @@ func triggerLaser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func runCatLaser() {
+	hatLock.Lock()
+	defer hatLock.Unlock()
+	laserPin.High()
+	defer laserPin.Low()
+	defer hat.ServoEnable(1, false)
+	defer hat.ServoEnable(2, false)
+	defer SetActive(false)
+
+	now := time.Now()
+	for time.Since(now) < *durationFlag {
+		//simplePattern(hat)
+		smoothLinePattern(hat)
+	}
+	log.Println("timeout")
+
+}
+
 func triggerCats(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	if strings.Join(r.Form["cats"], "") == "1" {
 		if !active {
 			SetActive(true)
-			go func() {
-				hatLock.Lock()
-				defer hatLock.Unlock()
-				laserPin.High()
-				defer laserPin.Low()
-				defer hat.ServoEnable(1, false)
-				defer hat.ServoEnable(2, false)
-				defer SetActive(false)
-
-				now := time.Now()
-				for time.Since(now) < *durationFlag {
-					//simplePattern(hat)
-					smoothLinePattern(hat)
-				}
-				log.Println("timeout")
-			}()
+			go runCatLaser()
 		}
 	}
 	activeLock.Lock()
@@ -232,6 +236,7 @@ func main() {
 	}
 	defer rpio.Close()
 
+	// Initialize the laser control pin, and defer turning it off.
 	pin := rpio.Pin(gpio_laser1)
 	pin.Output()
 	defer pin.Low()
@@ -239,8 +244,10 @@ func main() {
 
 	active = false
 
+	// Set up HTML template files.
 	tmpl = template.Must(template.ParseFiles("tmpl/page.html"))
 
+	// Set up PanTiltHat controls.
 	hat, err = pantilthat.MakePanTiltHat(&pantilthat.PanTiltHatParams{})
 	if err != nil {
 		log.Printf("error init: %s\n", err)
@@ -248,6 +255,14 @@ func main() {
 	}
 	defer hat.Close()
 
+	// Schedule a periodic automatic run, so the cats have fun every day:
+	ctx := context.Context(context.Background())
+	crontime := time.Hour*8 + time.Minute*40
+	go Schedule(ctx, time.Hour*24, crontime, func(_ time.Time) { runCatLaser() })
+	defer ctx.Done()
+
+	// Set up HTTP(S) server:
+	// (must be the last thing in main())
 	http.HandleFunc("/laser", triggerLaser)
 	http.HandleFunc("/cats", triggerCats)
 	http.HandleFunc("/", triggerCats)
