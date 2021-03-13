@@ -1,0 +1,16 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: laser-pointer
+Upstream-Contact: Ryan Anderson <ryan@michonline.com>
+Source: https://github.com/pugmajere/laser-pointer
+
+Files: *
+Copyright: 2019 
+License: public-domain
+
+Files: debian/*
+Copyright: 2021 Ryan Anderson <ryan@michonline.com>
+License: public-domain
+Comment: Debian packaging is licensed under the same terms as upstream
+
+License: public-domain
+Donated to the Public Domain.
