@@ -15,7 +15,7 @@ import "sync"
 import "time"
 
 const (
-	gpio_laser1 = 18
+	gpio_laser1 = 18   // pin
 	m           = -0.41
 	b           = 62.67
 
