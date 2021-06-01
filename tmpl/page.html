@@ -13,12 +13,15 @@
       <h1 class="ui dividing header">Cats like Lasers</h1>
       <h4>A division of Mythical Productions</h4>
 
-      <div>Laser: {{.LaserStatus}}
-        <form method="post" action="/laster">
-          <input type="hidden" name="cats" value="1">
-          <button class="ui primary button" type="submit">Activate
-            entertainment</button>
-        </form>
+      <div class="ui grid">
+        <div class="two wide column">Laser: {{.LaserStatus}}</div>
+        <div class="two wide column">
+          <form method="post" action="/laster">
+            <input type="hidden" name="cats" value="1">
+            <button class="ui primary button" type="submit">Activate
+              entertainment</button>
+          </form>
+        </div>
       </div>
     </div>
   </body>
