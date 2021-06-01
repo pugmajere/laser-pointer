@@ -10,14 +10,16 @@
   </head>
   <body>
     <div class="ui text container">
-    <h1 class="ui dividing header">Cats like Lasers</h1>
-    <div>Laser: {{.LaserStatus}}</div>
-    <div>
-      <form method="post" action="/laster">
-        <input type="hidden" name="cats" value="1">
-        <button class="ui primary button" type="submit">Activate entertainment</button>
-      </form>
-    </div>
+      <h1 class="ui dividing header">Cats like Lasers</h1>
+      <h2>A division of Mythical Productions</h2>
+
+      <div>Laser: {{.LaserStatus}}
+        <form method="post" action="/laster">
+          <input type="hidden" name="cats" value="1">
+          <button class="ui primary button" type="submit">Activate
+            entertainment</button>
+        </form>
+      </div>
     </div>
   </body>
 </html>
