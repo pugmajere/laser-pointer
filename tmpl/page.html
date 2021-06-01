@@ -12,9 +12,9 @@
     <h1>Cats like Lasers</h1>
     <div>Laser: {{.LaserStatus}}</div>
     <div>
-      <form>
+      <form method="post" action="/laster">
         <input type="hidden" name="cats" value="1">
-        <button type="submit" formmethod="post" formaction="/laser">Activate entertainment</button>
+        <button class="ui primary button" type="submit">Activate entertainment</button>
       </form>
     </div>
   </body>
