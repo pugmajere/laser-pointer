@@ -14,8 +14,9 @@
       <h4>A division of Mythical Productions</h4>
 
       <div class="ui grid">
-        <div class="two wide column">Laser: {{.LaserStatus}}</div>
-        <div class="two wide column">
+        <div class="four wide column">Laser:</div>
+        <div class="four wide column">{{.LaserStatus}}</div>
+        <div class="four wide column">
           <form method="post" action="/laster">
             <input type="hidden" name="cats" value="1">
             <button class="ui primary button" type="submit">Activate
