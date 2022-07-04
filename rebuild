@@ -8,6 +8,9 @@ GOPATH=~/go ; export GOPATH
 
 
 fileage=$(age cert.pem)
+if [ ! -f cert.pem ]; then
+    ./generate_cert --host laserpointer.internal.h4x0r5.com
+fi
 if [[ $fileage -gt $((86400 * 30)) ]]; then
     ./generate_cert --host laserpointer.internal.h4x0r5.com
 else
