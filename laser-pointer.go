@@ -22,7 +22,7 @@ const (
 	minA   = 26
 	maxA   = 81
 	minX   = 0.5
-	maxX   = 10.0
+	maxX   = 15.0
 	deltaX = 0.05
 
 	startPan = -30
