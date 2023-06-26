@@ -1,0 +1,6 @@
+github.com/go-daq/smbus v0.0.0-20201216173259-5725b4593606 h1:1lyGjYJXpYkF6fGQbhAIOdIaeymKQuS6RJVLVlTzc5w=
+github.com/go-daq/smbus v0.0.0-20201216173259-5725b4593606/go.mod h1:KDYiP7UvrtHRqnVLE6ziKupbojinMHjFUdo+1VA7r/Q=
+github.com/pugmajere/pantilthat v0.0.0-20190128073958-3b47a4b3c682 h1:rWWPN4PFqbiSjrjFw1zzJoYrRFMqWiL6sDXJsytZ1q0=
+github.com/pugmajere/pantilthat v0.0.0-20190128073958-3b47a4b3c682/go.mod h1:GZ/C9SJaWDBNf68vyi8jsymZDZYMrU2Crt+9UDBHyfQ=
+github.com/stianeikeland/go-rpio v4.2.0+incompatible h1:CUOlIxdJdT+H1obJPsmg8byu7jMSECLfAN9zynm5QGo=
+github.com/stianeikeland/go-rpio v4.2.0+incompatible/go.mod h1:Sh81rdJwD96E2wja2Gd7rrKM+XZ9LrwvN2w4IXrqLR8=
